@@ -14,7 +14,8 @@ def main():
 
     env = make_env()
     eval_env = make_env()
-    # RecordVideo(make_env(), "videos/minecart/", episode_trigger=lambda e: e % 1000 == 0)
+    #RecordVideo(make_env(), "videos/minecart/", episode_trigger=lambda e: e % 1000 == 0)
+
 
     agent = Envelope(
         env,

@@ -7,7 +7,7 @@ from morl_baselines.multi_policy.gpi_pd.gpi_pd_continuous_action import (
 )
 
 
-# from gymnasium.wrappers.record_video import RecordVideo
+from gymnasium.wrappers.record_video import RecordVideo
 
 
 def main(algo: str, gpi_pd: bool, g: int, timesteps_per_iter: int = 15000):
@@ -18,7 +18,8 @@ def main(algo: str, gpi_pd: bool, g: int, timesteps_per_iter: int = 15000):
         return env
 
     env = make_env(record_episode_statistics=True)
-    eval_env = make_env()  # RecordVideo(make_env(), "videos/minecart/", episode_trigger=lambda e: e % 1000 == 0)
+    eval_env = make_env()  
+    RecordVideo(make_env(), "videos/minecart/", episode_trigger=lambda e: e % 1000 == 0)
 
     agent = GPIPDContinuousAction(
         env,
