@@ -407,6 +407,11 @@ class Envelope(MOPolicy, MOAgent):
         q_values = self.q_net(obs, w)
         scalarized_q_values = th.einsum("r,bar->ba", w, q_values)
         max_act = th.argmax(scalarized_q_values, dim=1)
+        #print qvalues 
+        print(q_values)
+        print(scalarized_q_values)
+        print(w)
+
         return max_act.detach().item()
 
     @th.no_grad()
@@ -503,6 +508,7 @@ class Envelope(MOPolicy, MOAgent):
             reset_learning_starts: whether to reset the learning starts. Useful when training multiple times.
             verbose: whether to print the episode info.
         """
+        print('hello')
         if eval_env is not None:
             assert ref_point is not None, "Reference point must be provided for the hypervolume computation."
         if self.log:
@@ -535,6 +541,7 @@ class Envelope(MOPolicy, MOAgent):
         tensor_w = th.tensor(w).float().to(self.device)
 
         for _ in range(1, total_timesteps + 1):
+            print('1')
             if total_episodes is not None and num_episodes == total_episodes:
                 break
 
@@ -545,6 +552,8 @@ class Envelope(MOPolicy, MOAgent):
 
             next_obs, vec_reward, terminated, truncated, info = self.env.step(action)
             self.global_step += 1
+            print(eval_weights)
+            print(tensor_w)
 
             self.replay_buffer.add(obs, action, vec_reward, next_obs, terminated)
             if self.global_step >= self.learning_starts:
@@ -578,3 +587,5 @@ class Envelope(MOPolicy, MOAgent):
 
             else:
                 obs = next_obs
+
+        
