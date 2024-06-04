@@ -9,6 +9,10 @@ import numpy as np
 from cvxpy import SolverError
 from gymnasium.core import Env
 
+import numpy as np
+from scipy.optimize import linprog
+from itertools import combinations
+
 from morl_baselines.common.evaluation import policy_evaluation_mo
 from morl_baselines.common.morl_algorithm import MOPolicy
 from morl_baselines.common.performance_indicators import hypervolume
@@ -335,19 +339,29 @@ class LinearSupport:
         b[len(self.ccs) + 1] = -1
 
         def compute_poly_vertices(A, b):
-            # Based on https://stackoverflow.com/questions/65343771/solve-linear-inequalities
-            b = b.reshape((b.shape[0], 1))
-            mat = cdd.Matrix(np.hstack([b, -A]), number_type="float")
-            mat.rep_type = cdd.RepType.INEQUALITY
-            P = cdd.Polyhedron(mat)
-            g = P.get_generators()
-            V = np.array(g)
+            (m, n) = A.shape
             vertices = []
-            for i in range(V.shape[0]):
-                if V[i, 0] != 1:
+
+            # Generate all combinations of n constraints taken m at a time
+            for comb in combinations(range(m), n):
+                try:
+                    # Select the constraints
+                    A_comb = A[list(comb), :]
+                    b_comb = b[list(comb)]
+            
+                    # Solve the system of linear equations
+                    x = np.linalg.solve(A_comb, b_comb)
+            
+                    # Verify the solution satisfies all original constraints
+                    if np.all(np.dot(A, x) <= b + 1e-9):  # Add small tolerance to handle numerical issues
+                        vertices.append(x)
+                except np.linalg.LinAlgError:
+                    #  Singular matrix: skip this combination
                     continue
-                if i not in g.lin_set:
-                    vertices.append(V[i, 1:])
+    
+            # Remove duplicates (within a tolerance)
+            vertices = np.unique(np.round(vertices, decimals=10), axis=0)
+    
             return vertices
 
         vertices = compute_poly_vertices(A, b)
