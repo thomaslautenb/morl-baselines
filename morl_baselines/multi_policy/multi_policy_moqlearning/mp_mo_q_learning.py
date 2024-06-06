@@ -197,7 +197,7 @@ class MPMOQLearning(MOAgent):
             eval_env = deepcopy(self.env)
 
         eval_weights = equally_spaced_weights(self.reward_dim, n=num_eval_weights_for_front)
-
+        print(eval_weights)
         for iter in range(num_iterations):
             if self.weight_selection_algo == "ols" or self.weight_selection_algo == "gpi-ls":
                 w = self.linear_support.next_weight(
@@ -211,6 +211,7 @@ class MPMOQLearning(MOAgent):
                     w = random_weights(self.reward_dim, rng=self.np_random)
             elif self.weight_selection_algo == "random":
                 w = random_weights(self.reward_dim, rng=self.np_random)
+            print(w)
 
             if len(self.policies) == 0 or not self.dyna:
                 model = None

@@ -112,7 +112,7 @@ def make_env(env_id, seed, idx, run_name, gamma):
         idx: Index of the environment
         run_name: Name of the run
         gamma: Discount factor
-
+    gym.vector.make("CartPole-v1", num_envs=3)
     Returns:
         A function to create environments
     """
@@ -387,32 +387,24 @@ class MOPPO(MOPolicy):
         return tensor.unsqueeze(1).repeat(1, self.networks.reward_dim)
 
     def __collect_samples(self, obs: th.Tensor, done: th.Tensor):
-        """Fills the batch with {self.steps_per_iteration} samples collected from the environments.
-
-        Args:
-            obs: current observations
-            done: current dones
-
-        Returns:
-            next observation and dones
-        """
         for step in range(0, self.steps_per_iteration):
             self.global_step += 1 * self.num_envs
-            # Compute best action
             with th.no_grad():
                 action, logprob, _, value = self.networks.get_action_and_value(obs)
                 value = value.view(self.num_envs, self.networks.reward_dim)
 
-            # Perform action on the environment
             next_obs, reward, next_terminated, _, info = self.envs.step(action.cpu().numpy())
+            
+            # Debug prints
+            print("next_obs shape:", np.array(next_obs).shape)
+            print("reward shape:", np.array(reward).shape)
+            print("next_terminated shape:", np.array(next_terminated).shape)
+            
             reward = th.tensor(reward).to(self.device).view(self.num_envs, self.networks.reward_dim)
-            # storing to batch
             self.batch.add(obs, action, logprob, reward, done, value)
 
-            # Next iteration
             obs, done = th.Tensor(next_obs).to(self.device), th.Tensor(next_terminated).to(self.device)
 
-            # Episode info logging
             if "episode" in info.keys():
                 for item in info["episode"]:
                     log_episode_info(
